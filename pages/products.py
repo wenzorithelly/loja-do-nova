@@ -111,7 +111,6 @@ class Products(ft.SafeArea):
                     'price': float(fields['price'].value),
                     'promotion_price': float(fields['promotion_price'].value),
                 }
-                print(updated_product)
                 result = supabase.table("products").update(updated_product).eq('id', product_id).execute()
 
                 if not result.data:
@@ -124,10 +123,17 @@ class Products(ft.SafeArea):
                 display_error_banner(self.page, str(e))
 
     def handle_delete(self, product):
-        pass
+        product_id = product['id']
+        try:
+            data = supabase.table('products').delete().eq('id', product_id).execute()
+            if not data.data:
+                raise Exception(data.error.message)
+        except Exception as e:
+            display_error_banner(self.page, str(e))
 
     def search_items(self):
         query = self.search_field.value.lower()
-        filtered_data = [product for product in self.data if query in product["name"].lower()]
-        self.data = filtered_data
+        if query:
+            filtered_data = [product for product in self.data if query in product["name"].lower()]
+            self.data = filtered_data
         self.populate_products()
