@@ -1,6 +1,6 @@
 import os
 import flet as ft
-from pages.front import FrontBox
+from pages import front, products
 
 toggle_style_sheet: dict = {"icon": ft.icons.DARK_MODE_ROUNDED, "icon_size": 18}
 _dark: str = ft.colors.with_opacity(0.5, "white")
@@ -55,13 +55,12 @@ class App(ft.SafeArea):
             destinations=[
                 ft.NavigationDestination(icon=ft.icons.HOME_OUTLINED, selected_icon=ft.icons.HOME_ROUNDED),
                 ft.NavigationDestination(icon=ft.icons.SEND_OUTLINED, selected_icon=ft.icons.SEND_SHARP),
-                ft.NavigationDestination(icon=ft.icons.DASHBOARD_OUTLINED, selected_icon=ft.icons.DASHBOARD_ROUNDED),
-                ft.NavigationDestination(icon=ft.icons.SETTINGS_OUTLINED, selected_icon=ft.icons.SETTINGS_ROUNDED),
             ]
         )
         self.show_login_page()
-        self.frontbox: FrontBox = FrontBox(page=self.page, visible=True)
-        self.title: ft.Text = ft.Text("Fila Digital - Admin", size=20, weight=ft.FontWeight.W_800)
+        self.products: products.Products = products.Products(page, visible=True)
+        self.frontbox: front.FrontBox = front.FrontBox(page, visible=False)
+        self.title: ft.Text = ft.Text("Loja do Nova", size=20, weight=ft.FontWeight.W_800)
         self.toggle: ft.IconButton = ft.IconButton(
             **toggle_style_sheet, on_click=lambda e: self.switch(e)
         )
@@ -76,6 +75,8 @@ class App(ft.SafeArea):
                 ft.Divider(height=10, color="transparent"),
                 ft.Container(
                     content=ft.Column([
+                        self.products,
+                        self.frontbox
                     ]))
             ]
         )
@@ -96,9 +97,8 @@ class App(ft.SafeArea):
 
     def change_tab(self, e):
         my_index = e.control.selected_index
-        self.control.visible = my_index == 0
-        self.presence.visible = my_index == 1
-        self.settings.visible = my_index == 3
+        self.products.visible = my_index == 0
+        self.frontbox.visible = my_index == 1
         self.page.update()
 
     def show_login_page(self):
@@ -123,7 +123,7 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
-    print(1)
+    print(50)
     page.add(app)
     page.update()
 

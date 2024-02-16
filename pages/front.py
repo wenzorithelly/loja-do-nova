@@ -1,6 +1,5 @@
 import flet as ft
 import os
-import pg8000
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,3 +17,8 @@ class FrontBox(ft.SafeArea):
         super().__init__(visible)
         self.page = page
 
+        self.content: ft.Column = ft.Column(
+            controls=[
+
+            ]
+        )
