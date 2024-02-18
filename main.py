@@ -1,10 +1,6 @@
 import os
 import flet as ft
-from pages import front, products
-
-toggle_style_sheet: dict = {"icon": ft.icons.DARK_MODE_ROUNDED, "icon_size": 18}
-_dark: str = ft.colors.with_opacity(0.5, "white")
-_light: str = ft.colors.with_opacity(0.5, "black")
+from pages import front, products, settings
 
 
 class LoginPage(ft.SafeArea):
@@ -14,6 +10,7 @@ class LoginPage(ft.SafeArea):
         self.page = self.app.page
         self.login_input: ft.TextField = ft.TextField(expand=True, hint_text="Enter your password", height=50,
                                                       border_radius=12, content_padding=7,
+                                                      keyboard_type=ft.KeyboardType.NUMBER,
                                                       password=True, on_submit=lambda e: self.handle_login(e))
         self.login_button: ft.ElevatedButton = ft.ElevatedButton(
             text="Entrar",
@@ -53,52 +50,32 @@ class App(ft.SafeArea):
             height=page.window_height + 80,
             on_change=self.change_tab,
             destinations=[
-                ft.NavigationDestination(icon=ft.icons.PRODUCTION_QUANTITY_LIMITS_ROUNDED, selected_icon=ft.icons.HOME_ROUNDED),
-                ft.NavigationDestination(icon=ft.icons.INBOX_ROUNDED, selected_icon=ft.icons.SEND_SHARP),
+                ft.NavigationDestination(icon=ft.icons.INBOX_ROUNDED, selected_icon=ft.icons.INBOX_ROUNDED),
+                ft.NavigationDestination(icon=ft.icons.INBOX_OUTLINED, selected_icon=ft.icons.INBOX_ROUNDED),
+                ft.NavigationDestination(icon=ft.icons.SETTINGS_OUTLINED, selected_icon=ft.icons.SETTINGS_ROUNDED),
             ]
         )
         self.show_login_page()
-        self.products: products.Products = products.Products(page, visible=True)
-        self.frontbox: front.FrontBox = front.FrontBox(page, visible=False)
-        self.title: ft.Text = ft.Text("Loja do Nova", size=20, weight=ft.FontWeight.W_800)
-        self.toggle: ft.IconButton = ft.IconButton(
-            **toggle_style_sheet, on_click=lambda e: self.switch(e)
-        )
+        self.frontbox: front.FrontBox = front.FrontBox(page, visible=True)
+        self.products: products.Products = products.Products(page, visible=False)
+        self.settings: settings.Settings = settings.Settings(page, visible=False)
 
         self.main: ft.Column = ft.Column(
             controls=[
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[self.title, self.toggle]
-                ),
-                ft.Divider(height=10),
-                ft.Divider(height=10, color="transparent"),
                 ft.Container(
                     content=ft.Column([
+                        self.frontbox,
                         self.products,
-                        self.frontbox
+                        self.settings
                     ]))
             ], scroll=ft.ScrollMode.HIDDEN
         )
 
-    def switch(self, e) -> None:
-        if self.page.theme_mode == ft.ThemeMode.DARK:
-            self.page.theme_mode = ft.ThemeMode.LIGHT
-            self.toggle.icon = ft.icons.LIGHT_MODE_ROUNDED
-            self.page.navigation_bar.bgcolor = ft.colors.GREY_400
-            self.page.navigation_bar.active_color = ft.colors.GREY_800
-        else:
-            self.page.theme_mode = ft.ThemeMode.DARK
-            self.toggle.icon = ft.icons.DARK_MODE_ROUNDED
-            self.page.navigation_bar.bgcolor = ft.colors.GREY_900
-            self.page.navigation_bar.active_color = ft.colors.WHITE70
-
-        self.page.update()
-
     def change_tab(self, e):
         my_index = e.control.selected_index
-        self.products.visible = my_index == 0
-        self.frontbox.visible = my_index == 1
+        self.frontbox.visible = my_index == 0
+        self.products.visible = my_index == 1
+        self.settings.visible = my_index == 2
         self.page.update()
 
     def show_login_page(self):
@@ -123,7 +100,7 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
-    print(68)
+    print(104)
     page.add(app)
     page.update()
 

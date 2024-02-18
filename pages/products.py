@@ -46,7 +46,7 @@ search_style_sheet: dict = {"height": 35, "expand": True, "cursor_height": 15, "
 
 
 class Products(ft.SafeArea):
-    def __init__(self, page: ft.Page, visible):
+    def __init__(self, page: ft.Page, visible=False):
         super().__init__(visible)
         self.page = page
         self.search_field: ft.TextField = ft.TextField(**search_style_sheet, on_submit=lambda e: self.search_items())
@@ -88,7 +88,7 @@ class Products(ft.SafeArea):
                 ft.Row(controls=[
                     ft.Text("       "),
                     ft.Row(controls=[
-                        ft.Text("Lista de Produtos", size=18, weight=ft.FontWeight.W_600),
+                        ft.Text("Lista de Produtos", size=20, weight=ft.FontWeight.W_800),
                     ], alignment=ft.MainAxisAlignment.CENTER, expand=True),
                     self.add_product,
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
