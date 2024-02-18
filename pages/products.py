@@ -50,19 +50,51 @@ class Products(ft.SafeArea):
         super().__init__(visible)
         self.page = page
         self.search_field: ft.TextField = ft.TextField(**search_style_sheet, on_submit=lambda e: self.search_items())
-        self.search_button: ft.IconButton = ft.IconButton(**search_button_style_sheet, on_click=lambda e: self.search_items())
+        self.search_button: ft.IconButton = ft.IconButton(**search_button_style_sheet,
+                                                          on_click=lambda e: self.search_items())
         self.data = fetch_data(page=self.page)
         self.text_fields = {}
         self.expansion_panel_list = ft.ExpansionPanelList()
+        self.add_product: ft.IconButton = ft.IconButton(
+            icon=ft.icons.ADD_ROUNDED,
+            bgcolor=ft.colors.GREEN_600,
+            icon_color=ft.colors.WHITE,
+            on_click=self.open_dlg
+        )
 
+        # Dialog Content
+        self.input_name: ft.TextField = ft.TextField(label="Nome do Produto", expand=True, border_radius=12)
+        self.input_quantity: ft.TextField = ft.TextField(label="Quantidade", expand=True, border_radius=12)
+        self.input_price: ft.TextField = ft.TextField(label="Preço", expand=True, border_radius=12)
+        self.input_promotion: ft.TextField = ft.TextField(label="Preço Promocional", expand=True, border_radius=12)
+        self.input_category: ft.TextField = ft.TextField(label="Categoria", expand=True, border_radius=12)
+        self.dlg_content: ft.Container = ft.Container(content=ft.Column([
+            self.input_name, self.input_quantity, self.input_price, self.input_promotion, self.input_category
+        ], spacing=4))
+        self.add_product_dlg: ft.AlertDialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Adicionar Produto"),
+            content=self.dlg_content,
+            actions=[
+                ft.TextButton("Cancelar", on_click=self.close_dlg),
+                ft.TextButton("Salvar", on_click=self.save_product),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END
+        )
+
+        # MAIN PAGE
         self.main: ft.Column = ft.Column(
             controls=[
-                ft.Row(controls=[ft.Text("Lista de Produtos", size=18, weight=ft.FontWeight.W_600)],
-                       alignment=ft.MainAxisAlignment.CENTER),
+                ft.Row(controls=[
+                    ft.Text("       "),
+                    ft.Row(controls=[
+                        ft.Text("Lista de Produtos", size=18, weight=ft.FontWeight.W_600),
+                    ], alignment=ft.MainAxisAlignment.CENTER, expand=True),
+                    self.add_product,
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Row(controls=[self.search_field, self.search_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 self.expansion_panel_list,
-                ft.Divider(height=10)
-            ]
+            ], scroll=ft.ScrollMode.HIDDEN
         )
 
         self.content = self.main
@@ -71,27 +103,33 @@ class Products(ft.SafeArea):
     def populate_products(self):
         self.expansion_panel_list.controls.clear()
         for product in self.data:
+            name_field = ft.TextField(value=str(product['name']), label="Nome")
             quantity_field = ft.TextField(value=str(product['quantity']), label="Quantidade")
             price_field = ft.TextField(value=str(product['price']), label="Preço")
             promotion_price_field = ft.TextField(value=str(product['promotion_price']), label="Preço Promoção")
             self.text_fields[product['id']] = {
+                'name': name_field,
                 'quantity': quantity_field,
                 'price': price_field,
                 'promotion_price': promotion_price_field
             }
 
             exp = ft.ExpansionPanel(
-                header=ft.ListTile(title=ft.Text(product['name'])), can_tap_header=True
+                header=ft.ListTile(title=ft.Text(product['name'])), can_tap_header=True, expand=True
             )
 
             exp.content = ft.Container(
                 content=ft.Column([
+                    ft.Divider(height=1, color=ft.colors.TRANSPARENT),
+                    name_field,
                     quantity_field,
                     price_field,
                     promotion_price_field,
                     ft.Row(controls=[
-                        ft.IconButton(icon=ft.icons.SAVE_ROUNDED, on_click=lambda e, prod=product: self.handle_save(prod)),
-                        ft.IconButton(icon=ft.icons.DELETE_ROUNDED, on_click=lambda e, prod=product: self.handle_delete(prod))
+                        ft.IconButton(icon=ft.icons.SAVE_ROUNDED, icon_color=ft.colors.BLUE_600,
+                                      on_click=lambda e, prod=product: self.handle_save(prod)),
+                        ft.IconButton(icon=ft.icons.DELETE_ROUNDED, icon_color=ft.colors.RED_700,
+                                      on_click=lambda e, prod=product: self.handle_delete(prod))
                     ], alignment=ft.MainAxisAlignment.END)
                 ])
             )
@@ -104,12 +142,23 @@ class Products(ft.SafeArea):
         product_id = product['id']
         fields = self.text_fields.get(product_id)
 
+        def replace_comma(num):
+            if "," in num:
+                number = num.replace(",", ".")
+            else:
+                number = num
+            return number
+
+        price = replace_comma(fields['quantity'].value)
+        promotion_price = replace_comma(fields['promotion_price'].value)
+
         if fields:  # Check if the fields exist for the product
             try:
                 updated_product = {
+                    'name': str(fields['name'].value),
                     'quantity': int(fields['quantity'].value),
-                    'price': float(fields['price'].value),
-                    'promotion_price': float(fields['promotion_price'].value),
+                    'price': float(price),
+                    'promotion_price': float(promotion_price),
                 }
                 result = supabase.table("products").update(updated_product).eq('id', product_id).execute()
 
@@ -136,4 +185,47 @@ class Products(ft.SafeArea):
         if query:
             filtered_data = [product for product in self.data if query in product["name"].lower()]
             self.data = filtered_data
+        else:
+            self.data = fetch_data(self.page)
+
         self.populate_products()
+
+    def open_dlg(self, e):
+        self.page.dialog = self.add_product_dlg
+        self.add_product_dlg.open = True
+        self.page.update()
+
+    def close_dlg(self, e):
+        self.add_product_dlg.open = False
+        self.page.update()
+
+    def save_product(self, e):
+        def replace_comma(num):
+            if "," in num:
+                number = num.replace(",", ".")
+            else:
+                number = num
+            return number
+
+        promotion_price = self.input_promotion.value if len(self.input_promotion.value) > 0 else "0"
+        promotion_price = replace_comma(promotion_price)
+        price = replace_comma(self.input_price.value)
+
+        try:
+            data = supabase.table('products').insert({"name": self.input_name.value, "price": price,
+                                                      "quantity": self.input_quantity.value,
+                                                      "promotion_price": promotion_price,
+                                                      "category": self.input_category.value}).execute()
+            if not data.data:
+                raise Exception(data.error.message)
+            else:
+                self.close_dlg(e)
+                self.refresh_product_list()
+        except Exception as e:
+            display_error_banner(self.page, str(e))
+
+    def refresh_product_list(self):
+        self.data = fetch_data(page=self.page)
+        self.expansion_panel_list.controls.clear()
+        self.populate_products()
+        self.page.update()

@@ -53,8 +53,8 @@ class App(ft.SafeArea):
             height=page.window_height + 80,
             on_change=self.change_tab,
             destinations=[
-                ft.NavigationDestination(icon=ft.icons.HOME_OUTLINED, selected_icon=ft.icons.HOME_ROUNDED),
-                ft.NavigationDestination(icon=ft.icons.SEND_OUTLINED, selected_icon=ft.icons.SEND_SHARP),
+                ft.NavigationDestination(icon=ft.icons.PRODUCTION_QUANTITY_LIMITS_ROUNDED, selected_icon=ft.icons.HOME_ROUNDED),
+                ft.NavigationDestination(icon=ft.icons.INBOX_ROUNDED, selected_icon=ft.icons.SEND_SHARP),
             ]
         )
         self.show_login_page()
@@ -78,7 +78,7 @@ class App(ft.SafeArea):
                         self.products,
                         self.frontbox
                     ]))
-            ]
+            ], scroll=ft.ScrollMode.HIDDEN
         )
 
     def switch(self, e) -> None:
@@ -123,7 +123,7 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
-    print(50)
+    print(68)
     page.add(app)
     page.update()
 
