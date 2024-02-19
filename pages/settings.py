@@ -25,7 +25,8 @@ class Settings(ft.SafeArea):
             **toggle_style_sheet, on_click=lambda e: self.switch(e)
         )
 
-        self.bio = ft.Text("App desenvolvido por Wenzo Rithelly, caso aconteça algum erro, clique no botão abaixo", size=12)
+        self.bio = ft.Text("App desenvolvido por Wenzo Rithelly, caso aconteça algum erro, clique no botão abaixo", size=12,
+                           width=350)
         self.call_me: ft.ElevatedButton = ft.ElevatedButton(
             text="Call Support",
             icon=ft.icons.SEND_ROUNDED,
@@ -42,9 +43,10 @@ class Settings(ft.SafeArea):
                     controls=[self.title, self.toggle]
                 ),
                 ft.Divider(height=5),
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=10, color=ft.colors.TRANSPARENT),
                 ft.Row(controls=[self.bio], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=25, color=ft.colors.TRANSPARENT),
+                ft.Divider(height=5),
                 ft.Row(controls=[self.call_me], alignment=ft.MainAxisAlignment.CENTER)
             ], scroll=ft.ScrollMode.HIDDEN
         )
