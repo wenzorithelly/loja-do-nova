@@ -1,3 +1,4 @@
+# TODO: Refresh page when product is detete
 import flet as ft
 import os
 from supabase import create_client
@@ -46,15 +47,18 @@ search_style_sheet: dict = {"height": 35, "expand": True, "cursor_height": 15, "
 
 
 class Products(ft.SafeArea):
-    def __init__(self, page: ft.Page, visible=False):
+    def __init__(self, page: ft.Page, visible=False, frontbox=None):
         super().__init__(visible)
         self.page = page
+        self.frontbox = frontbox
         self.search_field: ft.TextField = ft.TextField(**search_style_sheet, on_submit=lambda e: self.search_items())
         self.search_button: ft.IconButton = ft.IconButton(**search_button_style_sheet,
                                                           on_click=lambda e: self.search_items())
         self.data = fetch_data(page=self.page)
         self.text_fields = {}
-        self.expansion_panel_list = ft.ExpansionPanelList()
+        self.save_product_button = None
+        self.delete_product_button = None
+        self.expansion_panel_list = ft.ExpansionPanelList(expand=True)
         self.add_product: ft.IconButton = ft.IconButton(
             icon=ft.icons.ADD_ROUNDED,
             bgcolor=ft.colors.GREEN_600,
@@ -92,9 +96,11 @@ class Products(ft.SafeArea):
                     ], alignment=ft.MainAxisAlignment.CENTER, expand=True),
                     self.add_product,
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Divider(height=4),
+                ft.Divider(height=10, color="transparent"),
                 ft.Row(controls=[self.search_field, self.search_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 self.expansion_panel_list,
-            ], scroll=ft.ScrollMode.HIDDEN
+            ], scroll=ft.ScrollMode.ALWAYS
         )
 
         self.content = self.main
@@ -117,7 +123,10 @@ class Products(ft.SafeArea):
             exp = ft.ExpansionPanel(
                 header=ft.ListTile(title=ft.Text(product['name'])), can_tap_header=True, expand=True
             )
-
+            self.save_product_button = ft.IconButton(icon=ft.icons.SAVE_ROUNDED, icon_color=ft.colors.BLUE_600,
+                                                     on_click=lambda e, prod=product: self.handle_save(prod))
+            self.delete_product_button = ft.IconButton(icon=ft.icons.DELETE_ROUNDED, icon_color=ft.colors.RED_700,
+                                                       on_click=lambda e, prod=product: self.handle_delete(prod))
             exp.content = ft.Container(
                 content=ft.Column([
                     ft.Divider(height=1, color=ft.colors.TRANSPARENT),
@@ -126,10 +135,8 @@ class Products(ft.SafeArea):
                     price_field,
                     promotion_price_field,
                     ft.Row(controls=[
-                        ft.IconButton(icon=ft.icons.SAVE_ROUNDED, icon_color=ft.colors.BLUE_600,
-                                      on_click=lambda e, prod=product: self.handle_save(prod)),
-                        ft.IconButton(icon=ft.icons.DELETE_ROUNDED, icon_color=ft.colors.RED_700,
-                                      on_click=lambda e, prod=product: self.handle_delete(prod))
+                        self.save_product_button,
+                        self.delete_product_button
                     ], alignment=ft.MainAxisAlignment.END)
                 ])
             )
@@ -139,6 +146,10 @@ class Products(ft.SafeArea):
         self.page.update()
 
     def handle_save(self, product):
+        self.save_product_button.content = ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.WHITE)
+        self.save_product_button.icon = None
+        self.page.update()
+
         product_id = product['id']
         fields = self.text_fields.get(product_id)
 
@@ -165,20 +176,30 @@ class Products(ft.SafeArea):
                 if not result.data:
                     raise Exception(result.error.message)
 
-                self.data = fetch_data(self.page)
-                self.populate_products()
+                self.refresh_product_list()
 
             except Exception as e:
                 display_error_banner(self.page, str(e))
 
+        self.save_product_button.icon = ft.icons.SAVE_ROUNDED
+        self.page.update()
+
     def handle_delete(self, product):
+        self.delete_product_button.content = ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.WHITE)
+        self.delete_product_button.icon = None
+        self.page.update()
+
         product_id = product['id']
         try:
             data = supabase.table('products').delete().eq('id', product_id).execute()
             if not data.data:
                 raise Exception(data.error.message)
+            self.refresh_product_list()
         except Exception as e:
             display_error_banner(self.page, str(e))
+
+        self.delete_product_button.icon = ft.icons.SAVE_ROUNDED
+        self.page.update()
 
     def search_items(self):
         query = self.search_field.value.lower()
@@ -228,4 +249,5 @@ class Products(ft.SafeArea):
         self.data = fetch_data(page=self.page)
         self.expansion_panel_list.controls.clear()
         self.populate_products()
+        self.frontbox.refresh_products()
         self.page.update()

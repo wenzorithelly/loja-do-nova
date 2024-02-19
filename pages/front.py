@@ -1,3 +1,4 @@
+# TODO: check scroll page
 import flet as ft
 import os
 from supabase import create_client
@@ -42,19 +43,10 @@ def fetch_data(page: ft.Page) -> list:
 
 class Products(ft.Container):
     def __init__(self, frontbox: 'FrontBox', products: dict) -> None:
-        super().__init__(width=170, height=170, padding=10, border_radius=10, margin=8,
-                         gradient=ft.LinearGradient(
-                             begin=ft.alignment.top_left,
-                             end=ft.Alignment(0.8, 1),
-                             colors=[
-                                ft.colors.INDIGO_800,
-                                ft.colors.GREY_900
-                             ],
-                             tile_mode=ft.GradientTileMode.MIRROR,
-                             rotation=math.pi / 3,
-                         ))
+        super().__init__(width=170, height=130, padding=10, border_radius=10, margin=8, bgcolor=ft.colors.GREY_600)
         self.frontbox = frontbox
         self.products = products
+        self.page = self.frontbox.page
 
         self.product_id_ = products['id']
         self.product_price_ = products['price']
@@ -64,24 +56,36 @@ class Products(ft.Container):
         self.promotion_price_str = self.replace_dot(str(self.promotion_price_))
         self.promotion_price_str = f"R${self.promotion_price_str}"
 
-        self.product_title: ft.Text = ft.Text(products['name'], size=15, weight=ft.FontWeight.W_600)
+        self.product_title: ft.Text = ft.Text(products['name'], size=18, weight=ft.FontWeight.W_600, color=ft.colors.WHITE)
         self.order_counter: ft.TextField = ft.TextField(value="0", text_align=ft.TextAlign.CENTER,
-                                                        height=20, expand=False, width=50)
-        self.product_price: ft.Text = ft.Text(self.product_price_str, size=14)
-        self.promotion_price: ft.Text = ft.Text(self.promotion_price_str, size=16, visible=False)
+                                                        height=20, expand=False, width=50, color=ft.colors.WHITE)
+        self.product_price: ft.Text = ft.Text(self.product_price_str, size=16, color=ft.colors.WHITE)
+        self.promotion_price: ft.Text = ft.Text("", size=16, color=ft.colors.WHITE)
         button_row = ft.Row(controls=[
-            ft.IconButton(ft.icons.REMOVE, on_click=self.minus_click),
+            ft.IconButton(ft.icons.REMOVE, on_click=self.minus_click, icon_color=ft.colors.WHITE),
             self.order_counter,
-            ft.IconButton(ft.icons.ADD, on_click=self.plus_click),
+            ft.IconButton(ft.icons.ADD, on_click=self.plus_click, icon_color=ft.colors.WHITE),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=5)
+
+        # if self.page.theme_mode == ft.ThemeMode.DARK:
+        #     self.bgcolor = ft.colors.GREY_100,
+        #     self.product_title.color = ft.colors.WHITE
+        #     self.product_price.color = ft.colors.WHITE
+        #     self.promotion_price.color = ft.colors.WHITE
+        #
+        # if self.page.theme_mode == ft.ThemeMode.LIGHT:
+        #     self.bgcolor = ft.colors.GREY_300,
+        #     self.product_title.color = ft.colors.BLACK
+        #     self.product_price.color = ft.colors.BLACK
+        #     self.promotion_price.color = ft.colors.BLACK
 
         self.if_promotion_price()
         self.content: ft.Column = ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
             controls=[
                 ft.Row(controls=[self.product_title]),
-                ft.Row(controls=[self.product_price, self.promotion_price], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Divider(height=4, color=ft.colors.TRANSPARENT),
+                ft.Row(controls=[self.promotion_price, self.product_price], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                # ft.Divider(height=1, color=ft.colors.TRANSPARENT),
                 button_row
             ]
         )
@@ -100,8 +104,8 @@ class Products(ft.Container):
 
     def if_promotion_price(self):
         if float(self.promotion_price_) > 0:
-            self.promotion_price.visible = True
-            self.product_price = ft.Text(spans=[ft.TextSpan(self.product_price_str, ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH))], size=12)
+            self.promotion_price.value = self.promotion_price_str
+            self.product_price = ft.Text(spans=[ft.TextSpan(self.product_price_str, ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH))], size=13)
         self.frontbox.page.update()
 
     @staticmethod
@@ -119,6 +123,10 @@ class FrontBox(ft.SafeArea):
         self.page = page
         self.data = fetch_data(page=self.page)
         self.list_products: ft.ListView = ft.ListView(expand=True, spacing=5)
+        self.reset_order_button: ft.TextButton = ft.TextButton(
+            text="Reset",
+            on_click=self.reset_order
+        )
         self.send_order_button: ft.ElevatedButton = ft.ElevatedButton(
             text="Finalizar",
             bgcolor=ft.colors.GREEN_600,
@@ -152,16 +160,24 @@ class FrontBox(ft.SafeArea):
 
         self.content: ft.Column = ft.Column(
             controls=[
-                ft.Divider(height=3, color=ft.colors.TRANSPARENT),
+                ft.Divider(height=0.8, color=ft.colors.TRANSPARENT),
                 ft.Row(controls=[ft.Text("Loja do Nova", size=20, weight=ft.FontWeight.W_800)],
                        alignment=ft.MainAxisAlignment.CENTER),
+                ft.Divider(height=0.2, color="transparent"),
+                ft.Divider(height=4),
+                ft.Divider(height=10, color="transparent"),
                 self.order_summary,
-                ft.Row(controls=[self.send_order_button], alignment=ft.MainAxisAlignment.END),
+                ft.Row(controls=[self.reset_order_button, self.send_order_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(height=2, color=ft.colors.TRANSPARENT),
                 ft.Divider(height=5),
-                ft.Container(content=self.list_products, expand=False)
-            ], scroll=ft.ScrollMode.HIDDEN
+                ft.Container(content=self.list_products, expand=True)
+            ], scroll=ft.ScrollMode.ALWAYS
         )
+        self.populate_products()
+
+    def refresh_products(self):
+        self.data = fetch_data(self.page)
+        self.list_products.controls.clear()
         self.populate_products()
 
     def populate_products(self):
@@ -201,6 +217,9 @@ class FrontBox(ft.SafeArea):
         self.total_amount.value = total_amount_str
 
     def send_order(self, e):
+        self.send_order_button.content = ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.WHITE)
+        self.send_order_button.icon = None
+        self.page.update()
         try:
             user_data = {
                 "name": self.user_name.value,
@@ -245,12 +264,16 @@ class FrontBox(ft.SafeArea):
         except Exception as a:
             display_error_banner(self.page, str(a))
 
+    def reset_order(self, e):
+        self.refresh_order_summary()
+
     def refresh_order_summary(self):
+        self.send_order_button.text = "Finalizar"
         self.user_name.value = ""
         self.user_email.value = ""
         self.user_age.value = ""
         self.user_phone.value = ""
-        self.total_amount.value = ""
+        self.total_amount.value = "R$0,00"
         self.payment_method.value = ""
 
         self.list_products.controls.clear()

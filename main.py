@@ -29,7 +29,8 @@ class LoginPage(ft.SafeArea):
                 ft.Row(controls=[self.login_input]),
                 ft.Divider(height=60, color=ft.colors.TRANSPARENT),
                 ft.Row(controls=[self.login_button], alignment=ft.MainAxisAlignment.CENTER)
-            ]
+            ],
+            scroll=ft.ScrollMode.ALWAYS
         )
 
     def handle_login(self, e):
@@ -57,7 +58,7 @@ class App(ft.SafeArea):
         )
         self.show_login_page()
         self.frontbox: front.FrontBox = front.FrontBox(page, visible=True)
-        self.products: products.Products = products.Products(page, visible=False)
+        self.products: products.Products = products.Products(page, visible=False, frontbox=self.frontbox)
         self.settings: settings.Settings = settings.Settings(page, visible=False)
 
         self.main: ft.Column = ft.Column(
@@ -68,7 +69,7 @@ class App(ft.SafeArea):
                         self.products,
                         self.settings
                     ]))
-            ], scroll=ft.ScrollMode.HIDDEN
+            ], scroll=ft.ScrollMode.ALWAYS
         )
 
     def change_tab(self, e):
@@ -100,7 +101,7 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
-    print(146)
+    print(200)
     page.add(app)
     page.update()
 

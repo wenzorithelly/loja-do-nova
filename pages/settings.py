@@ -1,3 +1,4 @@
+# TODO: check scroll page
 import flet as ft
 import os
 from supabase import create_client
@@ -40,9 +41,10 @@ class Settings(ft.SafeArea):
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[self.title, self.toggle]
                 ),
-                ft.Divider(height=10),
+                ft.Divider(height=5),
                 ft.Divider(height=10, color="transparent"),
                 ft.Row(controls=[self.bio], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Divider(height=10, color="transparent"),
                 ft.Row(controls=[self.call_me], alignment=ft.MainAxisAlignment.CENTER)
             ], scroll=ft.ScrollMode.HIDDEN
         )
@@ -77,7 +79,7 @@ class Settings(ft.SafeArea):
         }
         payload = {
             "chatId": f"556296163339@c.us",
-            "message": f"Preciso de suporte na Loja do Nova"
+            "message": f"Suporte necessário: Loja do Nova"
         }
         endpoint = 'https://waapi.app/api/v1/instances/5384/client/action/send-message'
         response = requests.post(endpoint, json=payload, headers=headers)
