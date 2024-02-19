@@ -56,6 +56,7 @@ class Products(ft.Container):
         self.frontbox = frontbox
         self.products = products
 
+        self.product_id_ = products['id']
         self.product_price_ = products['price']
         self.product_price_str = self.replace_dot(str(self.product_price_))
         self.product_price_str = f"R${self.product_price_str}"
@@ -123,7 +124,7 @@ class FrontBox(ft.SafeArea):
             bgcolor=ft.colors.GREEN_600,
             color=ft.colors.WHITE,
             height=30,
-            on_click=self.send_order
+            on_click=lambda e: self.send_order(e)
         )
 
         self.user_name: ft.TextField = ft.TextField(label="Nome", height=35, border_radius=12, expand=True)
@@ -175,6 +176,13 @@ class FrontBox(ft.SafeArea):
         self.page.update()
 
     def calculate_total_amount(self):
+        def replace_dot(num):
+            if "." in num:
+                number = num.replace(".", ",")
+            else:
+                number = num
+            return number
+
         total_amount = 0
         for row in self.list_products.controls:
             for product in row.controls:
@@ -189,18 +197,61 @@ class FrontBox(ft.SafeArea):
                         total_amount += product_price * quantity_ordered
 
         total_amount_str = f"R${total_amount:.2f}"
+        total_amount_str = replace_dot(total_amount_str)
         self.total_amount.value = total_amount_str
 
-    def send_order(self):
-        user_data = {
-            "name": self.user_name.value,
-            "email": self.user_email.value,
-            "phone": self.user_phone.value,
-            "age": self.user_age.value
-        }
-        user = supabase.table('users').insert(user_data).execute()
-        user_id = user.data[0]['id']
+    def send_order(self, e):
+        try:
+            user_data = {
+                "name": self.user_name.value,
+                "email": self.user_email.value if self.user_email.value else None,
+                "phone": self.user_phone.value if self.user_phone.value else None,
+                "age": self.user_age.value if self.user_age.value else None
+            }
+            user = supabase.table('users').insert(user_data).execute()
+            user_id = user.data[0]['id']
 
-        order_detail_data = {
+            order_detail_data = []
+            for row in self.list_products.controls:
+                for product in row.controls:
+                    if isinstance(product, Products):
+                        detail_data = {
+                            "product_id": product.product_id_,
+                            "quantity": int(product.order_counter.value)
+                        }
+                        order_detail_data.append(detail_data)
 
-        }
+            detail = supabase.table('order_details').insert(order_detail_data).execute()
+            detail_id = detail.data[0]['id']
+
+            def extract_and_convert_to_float(input_string):
+                cleaned_string = ''.join(char if char.isdigit() or char in {',', '.'} else ' ' for char in input_string)
+
+                cleaned_string = cleaned_string.replace(',', '.')
+
+                return float(cleaned_string)
+
+            order = supabase.table('orders').insert({
+                "user_id": user_id,
+                "detail_id": detail_id,
+                "payment_type": self.payment_method.value,
+                "total": extract_and_convert_to_float(self.total_amount.value)
+            }).execute()
+
+            if not order.data:
+                raise Exception
+            else:
+                self.refresh_order_summary()
+        except Exception as a:
+            display_error_banner(self.page, str(a))
+
+    def refresh_order_summary(self):
+        self.user_name.value = ""
+        self.user_email.value = ""
+        self.user_age.value = ""
+        self.user_phone.value = ""
+        self.total_amount.value = ""
+        self.payment_method.value = ""
+
+        self.list_products.controls.clear()
+        self.populate_products()

@@ -100,7 +100,7 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
-    print(133)
+    print(146)
     page.add(app)
     page.update()
 

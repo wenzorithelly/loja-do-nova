@@ -2,7 +2,8 @@ import flet as ft
 import os
 from supabase import create_client
 from dotenv import load_dotenv
-import math
+import time
+import requests
 
 load_dotenv()
 supabaseUrl = "https://crswolnvchmpqdjqldop.supabase.co"
@@ -22,6 +23,17 @@ class Settings(ft.SafeArea):
         self.toggle: ft.IconButton = ft.IconButton(
             **toggle_style_sheet, on_click=lambda e: self.switch(e)
         )
+
+        self.bio = ft.Text("App desenvolvido por Wenzo Rithelly, caso aconteça algum erro, clique no botão abaixo", size=12, width=230)
+        self.call_me: ft.ElevatedButton = ft.ElevatedButton(
+            text="Call Support",
+            icon=ft.icons.SEND_ROUNDED,
+            bgcolor=ft.colors.with_opacity(0.5, "white"),
+            color=ft.colors.GREY_900,
+            height=50,
+            on_click=self.send_message
+
+        )
         self.main: ft.Column = ft.Column(
             controls=[
                 ft.Row(
@@ -29,7 +41,9 @@ class Settings(ft.SafeArea):
                     controls=[self.title, self.toggle]
                 ),
                 ft.Divider(height=10),
-                ft.Divider(height=10, color="transparent")
+                ft.Divider(height=10, color="transparent"),
+                ft.Row(controls=[self.bio], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Row(controls=[self.call_me], alignment=ft.MainAxisAlignment.CENTER)
             ], scroll=ft.ScrollMode.HIDDEN
         )
 
@@ -47,4 +61,27 @@ class Settings(ft.SafeArea):
             self.page.navigation_bar.bgcolor = ft.colors.GREY_900
             self.page.navigation_bar.active_color = ft.colors.WHITE70
 
+        self.page.update()
+
+    def send_message(self, e):
+        self.call_me.content = ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.WHITE)
+        self.call_me.icon = None
+        self.page.update()
+
+        time.sleep(0.1)
+
+        headers = {
+            "Authorization": "Bearer " + os.environ.get("WAAPI_TOKEN"),
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "chatId": f"556296163339@c.us",
+            "message": f"Preciso de suporte na Loja do Nova"
+        }
+        endpoint = 'https://waapi.app/api/v1/instances/5384/client/action/send-message'
+        response = requests.post(endpoint, json=payload, headers=headers)
+
+        self.call_me.text = "Call Support"
+        self.call_me.icon = ft.icons.SEND_ROUNDED
         self.page.update()
