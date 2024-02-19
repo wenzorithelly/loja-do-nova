@@ -50,7 +50,7 @@ class App(ft.SafeArea):
             height=page.window_height + 80,
             on_change=self.change_tab,
             destinations=[
-                ft.NavigationDestination(icon=ft.icons.INBOX_ROUNDED, selected_icon=ft.icons.INBOX_ROUNDED),
+                ft.NavigationDestination(icon=ft.icons.ADD_SHOPPING_CART_OUTLINED, selected_icon=ft.icons.ADD_SHOPPING_CART_ROUNDED),
                 ft.NavigationDestination(icon=ft.icons.INBOX_OUTLINED, selected_icon=ft.icons.INBOX_ROUNDED),
                 ft.NavigationDestination(icon=ft.icons.SETTINGS_OUTLINED, selected_icon=ft.icons.SETTINGS_ROUNDED),
             ]
@@ -100,7 +100,7 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
-    print(104)
+    print(133)
     page.add(app)
     page.update()
 

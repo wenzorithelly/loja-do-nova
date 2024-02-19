@@ -18,7 +18,7 @@ class Settings(ft.SafeArea):
     def __init__(self, page: ft.page, visible):
         super().__init__(visible)
         self.page = page
-        self.title: ft.Text = ft.Text("Loja do Nova", size=20, weight=ft.FontWeight.W_800)
+        self.title: ft.Text = ft.Text("Configurações", size=20, weight=ft.FontWeight.W_800)
         self.toggle: ft.IconButton = ft.IconButton(
             **toggle_style_sheet, on_click=lambda e: self.switch(e)
         )
