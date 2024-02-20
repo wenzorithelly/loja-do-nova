@@ -1,6 +1,6 @@
 import os
 import flet as ft
-from pages import front, products, settings
+from pages import front, products, settings, dashboard
 
 
 class LoginPage(ft.SafeArea):
@@ -26,7 +26,7 @@ class LoginPage(ft.SafeArea):
                 ft.Divider(height=80, color=ft.colors.TRANSPARENT),
                 ft.Row(controls=[ft.Icon(name=ft.icons.LOCK, size=80)], alignment=ft.MainAxisAlignment.CENTER),
                 ft.Divider(height=30, color=ft.colors.TRANSPARENT),
-                ft.Row(controls=[self.login_input]),
+                ft.Row(controls=[self.login_input], alignment=ft.MainAxisAlignment.CENTER),
                 ft.Divider(height=60, color=ft.colors.TRANSPARENT),
                 ft.Row(controls=[self.login_button], alignment=ft.MainAxisAlignment.CENTER)
             ],
@@ -53,12 +53,14 @@ class App(ft.SafeArea):
             destinations=[
                 ft.NavigationDestination(icon=ft.icons.ADD_SHOPPING_CART_OUTLINED, selected_icon=ft.icons.ADD_SHOPPING_CART_ROUNDED),
                 ft.NavigationDestination(icon=ft.icons.INBOX_OUTLINED, selected_icon=ft.icons.INBOX_ROUNDED),
+                ft.NavigationDestination(icon=ft.icons.DASHBOARD_OUTLINED, selected_icon=ft.icons.DASHBOARD_ROUNDED),
                 ft.NavigationDestination(icon=ft.icons.SETTINGS_OUTLINED, selected_icon=ft.icons.SETTINGS_ROUNDED),
             ]
         )
         self.show_login_page()
         self.frontbox: front.FrontBox = front.FrontBox(page, visible=True)
         self.products: products.Products = products.Products(page, visible=False, frontbox=self.frontbox)
+        self.dashboard: dashboard.Dashboard = dashboard.Dashboard(page, visible=False)
         self.settings: settings.Settings = settings.Settings(page, visible=False)
 
         self.main: ft.Column = ft.Column(
@@ -67,6 +69,7 @@ class App(ft.SafeArea):
                     content=ft.Column([
                         self.frontbox,
                         self.products,
+                        self.dashboard,
                         self.settings
                     ]))
             ], scroll=ft.ScrollMode.ALWAYS
@@ -76,7 +79,8 @@ class App(ft.SafeArea):
         my_index = e.control.selected_index
         self.frontbox.visible = my_index == 0
         self.products.visible = my_index == 1
-        self.settings.visible = my_index == 2
+        self.dashboard.visible = my_index == 2
+        self.settings.visible = my_index == 3
         self.page.update()
 
     def show_login_page(self):

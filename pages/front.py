@@ -67,18 +67,6 @@ class Products(ft.Container):
             ft.IconButton(ft.icons.ADD, on_click=self.plus_click, icon_color=ft.colors.WHITE),
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=5)
 
-        # if self.page.theme_mode == ft.ThemeMode.DARK:
-        #     self.bgcolor = ft.colors.GREY_100,
-        #     self.product_title.color = ft.colors.WHITE
-        #     self.product_price.color = ft.colors.WHITE
-        #     self.promotion_price.color = ft.colors.WHITE
-        #
-        # if self.page.theme_mode == ft.ThemeMode.LIGHT:
-        #     self.bgcolor = ft.colors.GREY_300,
-        #     self.product_title.color = ft.colors.BLACK
-        #     self.product_price.color = ft.colors.BLACK
-        #     self.promotion_price.color = ft.colors.BLACK
-
         self.if_promotion_price()
         self.content: ft.Column = ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
@@ -234,11 +222,12 @@ class FrontBox(ft.SafeArea):
             for row in self.list_products.controls:
                 for product in row.controls:
                     if isinstance(product, Products):
-                        detail_data = {
-                            "product_id": product.product_id_,
-                            "quantity": int(product.order_counter.value)
-                        }
-                        order_detail_data.append(detail_data)
+                        if int(product.order_counter.value) > 0:
+                            detail_data = {
+                                "product_id": product.product_id_,
+                                "quantity": int(product.order_counter.value)
+                            }
+                            order_detail_data.append(detail_data)
 
             detail = supabase.table('order_details').insert(order_detail_data).execute()
             detail_id = detail.data[0]['id']
