@@ -41,6 +41,7 @@ def fetch_data(page: ft.Page) -> list:
         return []
 
 
+toggle_style_sheet: dict = {"icon": ft.icons.ADD_ROUNDED, "icon_size": 20, "icon_color": ft.colors.GREEN_700}
 search_button_style_sheet: dict = {"icon": ft.icons.SEARCH_ROUNDED, "icon_size": 25}
 search_style_sheet: dict = {"height": 35, "expand": True, "cursor_height": 15, "hint_text": "Pesquisar um produto...",
                             "content_padding": 7, "border_radius": 12}
@@ -60,9 +61,7 @@ class Products(ft.SafeArea):
         self.delete_product_button = None
         self.expansion_panel_list = ft.ExpansionPanelList(expand=True)
         self.add_product: ft.IconButton = ft.IconButton(
-            icon=ft.icons.ADD_ROUNDED,
-            bgcolor=ft.colors.GREEN_600,
-            icon_color=ft.colors.WHITE,
+            **toggle_style_sheet,
             on_click=self.open_dlg
         )
 
@@ -90,10 +89,7 @@ class Products(ft.SafeArea):
         self.main: ft.Column = ft.Column(
             controls=[
                 ft.Row(controls=[
-                    ft.Text("       "),
-                    ft.Row(controls=[
-                        ft.Text("Lista de Produtos", size=20, weight=ft.FontWeight.W_800),
-                    ], alignment=ft.MainAxisAlignment.CENTER, expand=True),
+                    ft.Text("Lista de Produtos", size=20, weight=ft.FontWeight.W_800),
                     self.add_product,
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(height=4),

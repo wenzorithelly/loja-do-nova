@@ -105,7 +105,7 @@ class Products(ft.Container):
         return number
 
 
-toggle_style_sheet: dict = {"icon": ft.icons.REFRESH_ROUNDED, "icon_size": 18}
+toggle_style_sheet: dict = {"icon": ft.icons.REFRESH_ROUNDED, "icon_size": 20}
 
 
 class FrontBox(ft.SafeArea):
@@ -160,7 +160,7 @@ class FrontBox(ft.SafeArea):
                     controls=[self.title, self.toggle]
                 ),
                 ft.Divider(height=5),
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=10, color=ft.colors.TRANSPARENT),
                 self.order_summary,
                 ft.Row(controls=[self.reset_order_button, self.send_order_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(height=2, color=ft.colors.TRANSPARENT),
@@ -280,8 +280,7 @@ class FrontBox(ft.SafeArea):
         self.toggle.icon = None
         self.page.update()
 
-        self.list_products.controls.cleat()
-        self.populate_products()
+        self.refresh_products()
 
         self.toggle.icon = ft.icons.REFRESH_ROUNDED
         self.page.update()

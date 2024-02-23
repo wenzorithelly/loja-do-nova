@@ -111,7 +111,7 @@ class Charts:
         return chart
 
 
-toggle_style_sheet: dict = {"icon": ft.icons.REFRESH_ROUNDED, "icon_size": 18}
+toggle_style_sheet: dict = {"icon": ft.icons.REFRESH_ROUNDED, "icon_size": 20}
 
 
 class Dashboard(ft.SafeArea):
@@ -137,7 +137,7 @@ class Dashboard(ft.SafeArea):
                     controls=[self.title, self.toggle]
                 ),
                 ft.Divider(height=5),
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=10, color=ft.colors.TRANSPARENT),
 
                 # CHARTS
 
