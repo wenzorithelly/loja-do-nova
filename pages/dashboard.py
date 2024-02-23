@@ -2,7 +2,7 @@ import flet as ft
 import pandas as pd
 from supabase import create_client
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
 load_dotenv()
@@ -13,10 +13,7 @@ supabase = create_client(supabase_url=supabaseUrl, supabase_key=supabaseKey)
 
 class Charts:
     def __init__(self):
-        orders_data = supabase.table('orders').select('*').execute().data
-        order_details_data = supabase.table('order_details').select('*').execute().data
-        users_data = supabase.table('users').select('id, age').execute().data
-        products_data = supabase.table('products').select('*').execute().data
+        orders_data, order_details_data, users_data, products_data = self.fetch_data()
         self.orders_df = pd.DataFrame(orders_data)
         self.order_details_df = pd.DataFrame(order_details_data)
         self.users_df = pd.DataFrame(users_data)
@@ -28,6 +25,15 @@ class Charts:
                                             how='inner', suffixes=('_orders', '_details_products'))
         self.final_merged_df = pd.merge(self.orders_with_details, self.users_df, left_on='user_id', right_on='id',
                                         how='inner', suffixes=('_orders_details_products', '_users'))
+
+    @staticmethod
+    def fetch_data():
+        orders_data = supabase.table('orders').select('*').execute().data
+        order_details_data = supabase.table('order_details').select('*').execute().data
+        users_data = supabase.table('users').select('id, age').execute().data
+        products_data = supabase.table('products').select('*').execute().data
+
+        return orders_data, order_details_data, users_data, products_data
 
     def total_sold_today(self):
         self.orders_df['created_at'] = pd.to_datetime(self.orders_df['created_at'])
@@ -105,11 +111,18 @@ class Charts:
         return chart
 
 
+toggle_style_sheet: dict = {"icon": ft.icons.REFRESH_ROUNDED, "icon_size": 18}
+
+
 class Dashboard(ft.SafeArea):
     def __init__(self, page: ft.Page, visible):
         super().__init__(visible)
         self.page = page
         self.charts = Charts()
+        self.title: ft.Text = ft.Text("Dashboard", size=20, weight=ft.FontWeight.W_800)
+        self.toggle: ft.IconButton = ft.IconButton(
+            **toggle_style_sheet, on_click=lambda e: self.refresh(e)
+        )
 
         self.products_per_age = self.charts.most_sold_products_per_age()
         self.datatable_per_age = self.datatable_ages_products()
@@ -119,11 +132,11 @@ class Dashboard(ft.SafeArea):
         self.most_sold_products = self.charts.most_sold_products()
         self.main: ft.Column = ft.Column([
             ft.Container(content=ft.Column([
-                ft.Divider(height=0.8, color=ft.colors.TRANSPARENT),
-                ft.Row(controls=[ft.Text("Dashboard", size=20, weight=ft.FontWeight.W_800)],
-                       alignment=ft.MainAxisAlignment.CENTER),
-                ft.Divider(height=0.2, color="transparent"),
-                ft.Divider(height=4),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[self.title, self.toggle]
+                ),
+                ft.Divider(height=5),
                 ft.Divider(height=10, color="transparent"),
 
                 # CHARTS
@@ -183,3 +196,13 @@ class Dashboard(ft.SafeArea):
             rows.append(ft.DataRow(cells=cells))
 
         return ft.DataTable(columns=columns, rows=rows)
+
+    def refresh(self, e):
+        self.toggle.content = ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.WHITE)
+        self.toggle.icon = None
+        self.page.update()
+
+        self.charts.fetch_data()
+
+        self.toggle.icon = ft.icons.REFRESH_ROUNDED
+        self.page.update()

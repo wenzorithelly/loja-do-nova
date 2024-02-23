@@ -105,11 +105,18 @@ class Products(ft.Container):
         return number
 
 
+toggle_style_sheet: dict = {"icon": ft.icons.REFRESH_ROUNDED, "icon_size": 18}
+
+
 class FrontBox(ft.SafeArea):
     def __init__(self, page: ft.Page, visible):
         super().__init__(visible)
         self.page = page
         self.data = fetch_data(page=self.page)
+        self.title: ft.Text = ft.Text("Loja do Nova", size=20, weight=ft.FontWeight.W_800)
+        self.toggle: ft.IconButton = ft.IconButton(
+            **toggle_style_sheet, on_click=lambda e: self.refresh(e)
+        )
         self.list_products: ft.ListView = ft.ListView(expand=True, spacing=5)
         self.reset_order_button: ft.TextButton = ft.TextButton(
             text="Reset",
@@ -148,11 +155,11 @@ class FrontBox(ft.SafeArea):
 
         self.content: ft.Column = ft.Column(
             controls=[
-                ft.Divider(height=0.8, color=ft.colors.TRANSPARENT),
-                ft.Row(controls=[ft.Text("Loja do Nova", size=20, weight=ft.FontWeight.W_800)],
-                       alignment=ft.MainAxisAlignment.CENTER),
-                ft.Divider(height=0.2, color="transparent"),
-                ft.Divider(height=4),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[self.title, self.toggle]
+                ),
+                ft.Divider(height=5),
                 ft.Divider(height=10, color="transparent"),
                 self.order_summary,
                 ft.Row(controls=[self.reset_order_button, self.send_order_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
@@ -267,3 +274,14 @@ class FrontBox(ft.SafeArea):
 
         self.list_products.controls.clear()
         self.populate_products()
+
+    def refresh(self, e):
+        self.toggle.content = ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.WHITE)
+        self.toggle.icon = None
+        self.page.update()
+
+        self.list_products.controls.cleat()
+        self.populate_products()
+
+        self.toggle.icon = ft.icons.REFRESH_ROUNDED
+        self.page.update()
