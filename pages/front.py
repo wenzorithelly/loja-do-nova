@@ -2,7 +2,7 @@ import flet as ft
 import os
 from supabase import create_client
 from dotenv import load_dotenv
-import math
+
 
 load_dotenv()
 supabaseUrl = "https://crswolnvchmpqdjqldop.supabase.co"
@@ -142,6 +142,7 @@ class FrontBox(ft.SafeArea):
                 ft.dropdown.Option("Dinheiro"),
                 ft.dropdown.Option("Pix")
             ],
+            focused_border_color=ft.colors.BLACK
         )
         self.total_amount: ft.Text = ft.Text("R$0,00", size=20)
         self.order_summary: ft.Container = ft.Container(content=ft.Column([

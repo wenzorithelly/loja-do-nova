@@ -105,6 +105,7 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
+    print(2)
     page.add(app)
     page.update()
 
