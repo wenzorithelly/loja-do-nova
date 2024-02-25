@@ -40,7 +40,7 @@ def fetch_data(page: ft.Page) -> list:
         return []
 
 
-toggle_style_sheet: dict = {"icon": ft.icons.ADD_ROUNDED, "icon_size": 24, "icon_color": ft.colors.GREEN_700}
+toggle_style_sheet: dict = {"icon": ft.icons.ADD_ROUNDED, "icon_size": 30, "icon_color": ft.colors.GREEN_500}
 search_button_style_sheet: dict = {"icon": ft.icons.SEARCH_ROUNDED, "icon_size": 25}
 search_style_sheet: dict = {"height": 35, "expand": True, "cursor_height": 15, "hint_text": "Pesquisar um produto...",
                             "content_padding": 7, "border_radius": 12}

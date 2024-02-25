@@ -3,6 +3,7 @@ import pandas as pd
 from supabase import create_client
 from dotenv import load_dotenv
 from datetime import datetime
+import pytz
 import os
 
 load_dotenv()
@@ -36,11 +37,13 @@ class Charts:
         return orders_data, order_details_data, users_data, products_data
 
     def total_sold_today(self):
-        self.orders_df['created_at'] = pd.to_datetime(self.orders_df['created_at'])
+        brazil_tz = pytz.timezone('America/Sao_Paulo')
+        self.orders_df['created_at'] = pd.to_datetime(self.orders_df['created_at'], errors='coerce').dt.tz_convert(brazil_tz)
         self.orders_df['total'] = self.orders_df['total'].astype(float)
         today = datetime.now().date()
         data = self.orders_df.loc[self.orders_df['created_at'].dt.date == today]
         total_sum = data['total'].sum()
+        total_sum = round(total_sum, 2)
         return total_sum
 
     def orders_total_today(self):
@@ -72,6 +75,7 @@ class Charts:
         result_df['age_group'] = pd.cut(result_df['age'], bins=bins[:-1], labels=labels, right=False)
 
         result_df = result_df[['age_group', 'name', 'quantity_order_details']]
+        result_df = result_df.groupby('age_group', observed=True).first().reset_index()
         return result_df
 
     def most_sold_products(self):
@@ -124,12 +128,7 @@ class Dashboard(ft.SafeArea):
             **toggle_style_sheet, on_click=lambda e: self.refresh(e)
         )
 
-        self.products_per_age = self.charts.most_sold_products_per_age()
-        self.datatable_per_age = self.datatable_ages_products()
-        self.today_total_sum = self.charts.total_sold_today()
-        self.todays_sales = self.charts.orders_total_today()
-        self.today_products = self.charts.products_sold_today()
-        self.most_sold_products = self.charts.most_sold_products()
+        self.all_charts = self.load_data()
         self.main: ft.Column = ft.Column([
             ft.Container(content=ft.Column([
                 ft.Row(
@@ -140,46 +139,15 @@ class Dashboard(ft.SafeArea):
                 ft.Divider(height=10, color=ft.colors.TRANSPARENT),
 
                 # CHARTS
-
-                # TODAY's DATA
-                ft.Column(controls=[
-                    ft.Row(controls=[
-                        ft.Text("Hoje:", size=20, weight=ft.FontWeight.W_800, text_align=ft.TextAlign.CENTER),
-                        ft.Column(controls=[
-                            ft.Text("Vendas", size=18, weight=ft.FontWeight.W_500, text_align=ft.TextAlign.CENTER),
-                            ft.Text(self.todays_sales, size=30, weight=ft.FontWeight.BOLD, italic=True, text_align=ft.TextAlign.CENTER)
-                        ], alignment=ft.MainAxisAlignment.CENTER),
-                        ft.Column(controls=[
-                            ft.Text("Produtos", size=18, weight=ft.FontWeight.W_500, text_align=ft.TextAlign.CENTER),
-                            ft.Text(self.today_products, size=30, weight=ft.FontWeight.BOLD, italic=True,
-                                    text_align=ft.TextAlign.CENTER)
-                        ], alignment=ft.MainAxisAlignment.CENTER),
-                        ft.Column(controls=[
-                            ft.Text("Total Vendido", size=18, weight=ft.FontWeight.W_500),
-                            ft.Text(f"R${self.today_total_sum}", size=30, weight=ft.FontWeight.BOLD, italic=True)
-                        ], alignment=ft.MainAxisAlignment.CENTER)
-                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, spacing=5),
-                ], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Divider(height=10, color=ft.colors.TRANSPARENT),
-
-                # MOST SOLD PRODUCTS
-                ft.Divider(height=10),
-                ft.Row(controls=[ft.Text("Produtos Mais Vendidos", size=18, weight=ft.FontWeight.W_500)],
-                       alignment=ft.MainAxisAlignment.CENTER),
-                ft.Container(content=self.most_sold_products, alignment=ft.alignment.center),
-                ft.Divider(height=10, color=ft.colors.TRANSPARENT),
-
-                # MOST SOLD PRODUCTS PER AGE
-                ft.Divider(height=10),
-                ft.Row(controls=[ft.Text("Produtos Mais Vendidos por Idade", size=18, weight=ft.FontWeight.W_500)],
-                       alignment=ft.MainAxisAlignment.CENTER),
-                ft.Container(content=self.datatable_per_age, alignment=ft.alignment.center)]), expand=True)
+                self.all_charts
+                ]), expand=True)
         ],
             scroll=ft.ScrollMode.ALWAYS)
 
         self.content = self.main
 
     def datatable_ages_products(self):
+        products_per_age = self.charts.most_sold_products_per_age()
         columns = [
             ft.DataColumn(ft.Text("Idade")),
             ft.DataColumn(ft.Text("Produto")),
@@ -187,7 +155,7 @@ class Dashboard(ft.SafeArea):
         ]
 
         rows = []
-        for index, row in self.products_per_age.iterrows():
+        for index, row in products_per_age.iterrows():
             cells = [
                 ft.DataCell(ft.Text(str(row['age_group']))),
                 ft.DataCell(ft.Text(row['name'])),
@@ -197,12 +165,60 @@ class Dashboard(ft.SafeArea):
 
         return ft.DataTable(columns=columns, rows=rows)
 
+    def load_data(self):
+        datatable_per_age = self.datatable_ages_products()
+        today_total_sum = self.charts.total_sold_today()
+        todays_sales = self.charts.orders_total_today()
+        today_products = self.charts.products_sold_today()
+        most_sold_products = self.charts.most_sold_products()
+
+        all_charts = ft.Column([
+            ft.Column(controls=[
+                ft.Row(controls=[
+                    ft.Text("Hoje:", size=20, weight=ft.FontWeight.W_800, text_align=ft.TextAlign.CENTER),
+                    ft.Column(controls=[
+                        ft.Text("Vendas", size=18, weight=ft.FontWeight.W_500, text_align=ft.TextAlign.CENTER),
+                        ft.Text(todays_sales, size=30, weight=ft.FontWeight.BOLD, italic=True,
+                                text_align=ft.TextAlign.CENTER)
+                    ], alignment=ft.MainAxisAlignment.CENTER),
+                    ft.Column(controls=[
+                        ft.Text("Produtos", size=18, weight=ft.FontWeight.W_500, text_align=ft.TextAlign.CENTER),
+                        ft.Text(today_products, size=30, weight=ft.FontWeight.BOLD, italic=True,
+                                text_align=ft.TextAlign.CENTER)
+                    ], alignment=ft.MainAxisAlignment.CENTER),
+                    ft.Column(controls=[
+                        ft.Text("Total Vendido", size=18, weight=ft.FontWeight.W_500),
+                        ft.Text(f"R${today_total_sum}", size=30, weight=ft.FontWeight.BOLD, italic=True)
+                    ], alignment=ft.MainAxisAlignment.CENTER)
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, spacing=5),
+            ], alignment=ft.MainAxisAlignment.CENTER),
+            ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+
+            # MOST SOLD PRODUCTS
+            ft.Divider(height=10),
+            ft.Row(controls=[ft.Text("Produtos Mais Vendidos", size=18, weight=ft.FontWeight.W_500)],
+                   alignment=ft.MainAxisAlignment.CENTER),
+            ft.Container(content=most_sold_products, alignment=ft.alignment.center),
+            ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+
+            # MOST SOLD PRODUCTS PER AGE
+            ft.Divider(height=10),
+            ft.Row(controls=[ft.Text("Produtos Mais Vendidos por Idade", size=18, weight=ft.FontWeight.W_500)],
+                   alignment=ft.MainAxisAlignment.CENTER),
+            ft.Container(content=datatable_per_age, alignment=ft.alignment.center)
+        ])
+
+        return all_charts
+
     def refresh(self, e):
         self.toggle.content = ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.WHITE)
         self.toggle.icon = None
         self.page.update()
 
         self.charts.fetch_data()
+        new_charts = self.load_data()
+        self.all_charts.controls.clear()
+        self.all_charts.controls.extend(new_charts.controls)
 
         self.toggle.icon = ft.icons.REFRESH_ROUNDED
         self.page.update()

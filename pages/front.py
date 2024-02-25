@@ -135,13 +135,13 @@ class FrontBox(ft.SafeArea):
         self.user_email: ft.TextField = ft.TextField(label="E-mail", height=35, border_radius=12, expand=True)
         self.payment_method: ft.Dropdown = ft.Dropdown(
             label="Pagamento",
-            width=150, height=40, border_radius=12,
+            width=150, border_radius=12,
             options=[
                 ft.dropdown.Option("Crédito"),
                 ft.dropdown.Option("Débito"),
                 ft.dropdown.Option("Dinheiro"),
                 ft.dropdown.Option("Pix")
-            ]
+            ],
         )
         self.total_amount: ft.Text = ft.Text("R$0,00", size=20)
         self.order_summary: ft.Container = ft.Container(content=ft.Column([
@@ -254,8 +254,8 @@ class FrontBox(ft.SafeArea):
 
             if not order.data:
                 raise Exception
-            else:
-                self.refresh_order_summary()
+
+            self.refresh_order_summary()
         except Exception as a:
             display_error_banner(self.page, str(a))
 
@@ -263,13 +263,14 @@ class FrontBox(ft.SafeArea):
         self.refresh_order_summary()
 
     def refresh_order_summary(self):
+        self.send_order_button.content = None
         self.send_order_button.text = "Finalizar"
         self.user_name.value = ""
         self.user_email.value = ""
         self.user_age.value = ""
         self.user_phone.value = ""
         self.total_amount.value = "R$0,00"
-        self.payment_method.value = ""
+        self.payment_method.value = None
 
         self.list_products.controls.clear()
         self.populate_products()
