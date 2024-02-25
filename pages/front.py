@@ -1,4 +1,3 @@
-# TODO: check scroll page
 import flet as ft
 import os
 from supabase import create_client

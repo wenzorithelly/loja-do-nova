@@ -1,4 +1,3 @@
-# TODO: Refresh page when product is detete
 import flet as ft
 import os
 from supabase import create_client
