@@ -169,7 +169,7 @@ class Products(ft.SafeArea):
                 result = supabase.table("products").update(updated_product).eq('id', product_id).execute()
 
                 if not result.data:
-                    raise Exception(result.error.message)
+                    raise Exception(result.data)
 
                 self.refresh_product_list()
 
@@ -188,7 +188,7 @@ class Products(ft.SafeArea):
         try:
             data = supabase.table('products').delete().eq('id', product_id).execute()
             if not data.data:
-                raise Exception(data.error.message)
+                raise Exception(data.data)
             self.refresh_product_list()
         except Exception as e:
             display_error_banner(self.page, str(e))
@@ -233,7 +233,7 @@ class Products(ft.SafeArea):
                                                       "promotion_price": promotion_price,
                                                       "category": self.input_category.value}).execute()
             if not data.data:
-                raise Exception(data.error.message)
+                raise Exception(data.data)
             else:
                 self.close_dlg(e)
                 self.refresh_product_list()

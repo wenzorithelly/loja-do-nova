@@ -82,7 +82,7 @@ class Settings(ft.SafeArea):
             "chatId": f"556296163339@c.us",
             "message": f"Suporte necessário: Loja do Nova"
         }
-        endpoint = 'https://waapi.app/api/v1/instances/5384/client/action/send-message'
+        endpoint = 'https://waapi.app/api/v1/instances/6309/client/action/send-message'
         response = requests.post(endpoint, json=payload, headers=headers)
 
         self.call_me.text = "Call Support"
