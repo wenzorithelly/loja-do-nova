@@ -75,7 +75,6 @@ class App(ft.SafeArea):
             destinations=[
                 ft.NavigationDestination(icon=ft.icons.ADD_SHOPPING_CART_OUTLINED,
                                          selected_icon=ft.icons.ADD_SHOPPING_CART_ROUNDED),
-                ft.NavigationDestination(icon=ft.icons.INBOX_OUTLINED, selected_icon=ft.icons.INBOX_ROUNDED),
                 ft.NavigationDestination(icon=ft.icons.SETTINGS_OUTLINED, selected_icon=ft.icons.SETTINGS_ROUNDED),
             ]
         )
@@ -102,7 +101,6 @@ class App(ft.SafeArea):
                 ft.Container(
                     content=ft.Column([
                         self.frontbox,
-                        self.products,
                         self.settings
                     ]))
             ], scroll=ft.ScrollMode.ALWAYS
@@ -119,8 +117,7 @@ class App(ft.SafeArea):
     def change_tab_user(self, e):
         my_index = e.control.selected_index
         self.frontbox.visible = my_index == 0
-        self.products.visible = my_index == 1
-        self.settings.visible = my_index == 2
+        self.settings.visible = my_index == 1
         self.page.update()
 
     def show_login_page(self):
