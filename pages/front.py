@@ -41,7 +41,7 @@ def fetch_data(page: ft.Page) -> list:
 
 
 class Products(ft.Container):
-    def __init__(self, frontbox: 'FrontBox', products: dict) -> None:
+    def __init__(self, frontbox: 'FrontBox', products: dict, quantity: int) -> None:
         super().__init__(width=170, height=130, padding=10, border_radius=10, margin=8, bgcolor=ft.colors.GREY_600)
         self.frontbox = frontbox
         self.products = products
@@ -56,7 +56,7 @@ class Products(ft.Container):
         self.promotion_price_str = f"R${self.promotion_price_str}"
 
         self.product_title: ft.Text = ft.Text(products['name'], size=18, weight=ft.FontWeight.W_600, color=ft.colors.WHITE)
-        self.order_counter: ft.TextField = ft.TextField(value="0", text_align=ft.TextAlign.CENTER,
+        self.order_counter: ft.TextField = ft.TextField(value=str(quantity), text_align=ft.TextAlign.CENTER,
                                                         height=20, expand=False, width=50, color=ft.colors.WHITE)
         self.product_price: ft.Text = ft.Text(self.product_price_str, size=16, color=ft.colors.WHITE)
         self.promotion_price: ft.Text = ft.Text("", size=16, color=ft.colors.WHITE)
@@ -105,6 +105,9 @@ class Products(ft.Container):
 
 
 toggle_style_sheet: dict = {"icon": ft.icons.REFRESH_ROUNDED, "icon_size": 20}
+search_button_style_sheet: dict = {"icon": ft.icons.SEARCH_ROUNDED, "icon_size": 25}
+search_style_sheet: dict = {"height": 35, "expand": True, "cursor_height": 15, "hint_text": "Pesquisar um produto...",
+                            "content_padding": 7, "border_radius": 12}
 
 
 class FrontBox(ft.SafeArea):
@@ -116,7 +119,11 @@ class FrontBox(ft.SafeArea):
         self.toggle: ft.IconButton = ft.IconButton(
             **toggle_style_sheet, on_click=lambda e: self.refresh(e)
         )
+        self.search_field: ft.TextField = ft.TextField(**search_style_sheet, on_submit=lambda e: self.search_items())
+        self.search_button: ft.IconButton = ft.IconButton(**search_button_style_sheet,
+                                                          on_click=lambda e: self.search_items())
         self.list_products: ft.ListView = ft.ListView(expand=True, spacing=5)
+        self.quantities = {}
         self.reset_order_button: ft.TextButton = ft.TextButton(
             text="Reset",
             on_click=self.reset_order
@@ -125,7 +132,7 @@ class FrontBox(ft.SafeArea):
             text="Finalizar",
             bgcolor=ft.colors.GREEN_600,
             color=ft.colors.WHITE,
-            height=30,
+            height=35,
             on_click=lambda e: self.send_order(e)
         )
 
@@ -165,6 +172,7 @@ class FrontBox(ft.SafeArea):
                 ft.Row(controls=[self.reset_order_button, self.send_order_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(height=2, color=ft.colors.TRANSPARENT),
                 ft.Divider(height=5),
+                ft.Row(controls=[self.search_field, self.search_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Container(content=self.list_products, expand=True)
             ], scroll=ft.ScrollMode.ALWAYS
         )
@@ -180,11 +188,24 @@ class FrontBox(ft.SafeArea):
         for i in range(0, len(self.data), products_per_row):
             row_controls = []
             for product in self.data[i:i + products_per_row]:
-                row_controls.append(Products(self, product))
+                if product['id'] not in self.quantities:
+                    self.quantities[product['id']] = 0
+                row_controls.append(Products(self, product, self.quantities[product['id']]))
 
             self.list_products.controls.append(ft.Row(controls=row_controls, spacing=10))
 
         self.page.update()
+
+    def search_items(self):
+        query = self.search_field.value.lower()
+        if query:
+            filtered_data = [product for product in self.data if query in product["name"].lower()]
+            self.data = filtered_data
+        else:
+            self.data = fetch_data(self.page)
+
+        self.list_products.controls.clear()
+        self.populate_products()
 
     def calculate_total_amount(self):
         def replace_dot(num):
@@ -202,10 +223,12 @@ class FrontBox(ft.SafeArea):
                         product_price = float(product.promotion_price_)
                         quantity_ordered = int(product.order_counter.value)
                         total_amount += product_price * quantity_ordered
+                        self.quantities[product.product_id_] = quantity_ordered
                     else:
                         product_price = float(product.product_price_)
                         quantity_ordered = int(product.order_counter.value)
                         total_amount += product_price * quantity_ordered
+                        self.quantities[product.product_id_] = quantity_ordered
 
         total_amount_str = f"R${total_amount:.2f}"
         total_amount_str = replace_dot(total_amount_str)
@@ -272,6 +295,7 @@ class FrontBox(ft.SafeArea):
         self.user_phone.value = ""
         self.total_amount.value = "R$0,00"
         self.payment_method.value = None
+        self.quantities = {}
 
         self.list_products.controls.clear()
         self.populate_products()
