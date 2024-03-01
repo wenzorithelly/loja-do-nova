@@ -108,11 +108,13 @@ class Products(ft.SafeArea):
             quantity_field = ft.TextField(value=str(product['quantity']), label="Quantidade")
             price_field = ft.TextField(value=str(product['price']), label="Preço")
             promotion_price_field = ft.TextField(value=str(product['promotion_price']), label="Preço Promoção")
+            category_field = ft.TextField(value=str(product['category']), label="Categoria")
             self.text_fields[product['id']] = {
                 'name': name_field,
                 'quantity': quantity_field,
                 'price': price_field,
-                'promotion_price': promotion_price_field
+                'promotion_price': promotion_price_field,
+                "category": category_field
             }
 
             exp = ft.ExpansionPanel(
@@ -129,6 +131,7 @@ class Products(ft.SafeArea):
                     quantity_field,
                     price_field,
                     promotion_price_field,
+                    category_field,
                     ft.Row(controls=[
                         self.save_product_button,
                         self.delete_product_button
@@ -155,7 +158,7 @@ class Products(ft.SafeArea):
                 number = num
             return number
 
-        price = replace_comma(fields['quantity'].value)
+        price = replace_comma(fields['price'].value)
         promotion_price = replace_comma(fields['promotion_price'].value)
 
         if fields:  # Check if the fields exist for the product
@@ -165,6 +168,7 @@ class Products(ft.SafeArea):
                     'quantity': int(fields['quantity'].value),
                     'price': float(price),
                     'promotion_price': float(promotion_price),
+                    'category': str(fields['category'])
                 }
                 result = supabase.table("products").update(updated_product).eq('id', product_id).execute()
 

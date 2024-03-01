@@ -79,7 +79,7 @@ class App(ft.SafeArea):
             ]
         )
         self.show_login_page()
-        self.frontbox: front.FrontBox = front.FrontBox(page, visible=True)
+        self.frontbox: front.FrontBox = front.FrontBox(page, visible=True, app=self)
         self.products: products.Products = products.Products(page, visible=False, frontbox=self.frontbox)
         self.dashboard: dashboard.Dashboard = dashboard.Dashboard(page, visible=False)
         self.settings: settings.Settings = settings.Settings(page, visible=False)
@@ -147,7 +147,6 @@ def main(page: ft.Page):
     page.theme = theme
 
     app: App = App(page)
-    print(1)
     page.add(app)
     page.update()
 

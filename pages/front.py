@@ -27,7 +27,7 @@ def display_error_banner(page, error):
 
 def fetch_data(page: ft.Page) -> list:
     try:
-        result = supabase.table("products").select('*').execute()
+        result = supabase.table("products").select('*').order("category").execute()
         products = result.data
 
         name_list = [{'id': product['id'], 'name': product['name'], 'quantity': product['quantity'],
@@ -42,10 +42,17 @@ def fetch_data(page: ft.Page) -> list:
 
 class Products(ft.Container):
     def __init__(self, frontbox: 'FrontBox', products: dict, quantity: int) -> None:
-        super().__init__(width=170, height=130, padding=10, border_radius=10, margin=8, bgcolor=ft.colors.GREY_600)
+        super().__init__(width=180, height=130, padding=4, border_radius=10, margin=4, bgcolor=ft.colors.GREY_600)
         self.frontbox = frontbox
         self.products = products
         self.page = self.frontbox.page
+
+        category_color_mapping = {
+            'vestuário': ft.colors.BLUE_700,
+        }
+
+        category = products['category'].lower()
+        self.bgcolor = category_color_mapping.get(category, ft.colors.GREY_600)
 
         self.product_id_ = products['id']
         self.product_price_ = products['price']
@@ -55,7 +62,7 @@ class Products(ft.Container):
         self.promotion_price_str = self.replace_dot(str(self.promotion_price_))
         self.promotion_price_str = f"R${self.promotion_price_str}"
 
-        self.product_title: ft.Text = ft.Text(products['name'], size=18, weight=ft.FontWeight.W_600, color=ft.colors.WHITE)
+        self.product_title: ft.Text = ft.Text(products['name'], size=14, weight=ft.FontWeight.W_600, color=ft.colors.WHITE)
         self.order_counter: ft.TextField = ft.TextField(value=str(quantity), text_align=ft.TextAlign.CENTER,
                                                         height=20, expand=False, width=50, color=ft.colors.WHITE)
         self.product_price: ft.Text = ft.Text(self.product_price_str, size=16, color=ft.colors.WHITE)
@@ -64,7 +71,7 @@ class Products(ft.Container):
             ft.IconButton(ft.icons.REMOVE, on_click=self.minus_click, icon_color=ft.colors.WHITE),
             self.order_counter,
             ft.IconButton(ft.icons.ADD, on_click=self.plus_click, icon_color=ft.colors.WHITE),
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=5)
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=2)
 
         self.if_promotion_price()
         self.content: ft.Column = ft.Column(
@@ -111,11 +118,13 @@ search_style_sheet: dict = {"height": 35, "expand": True, "cursor_height": 15, "
 
 
 class FrontBox(ft.SafeArea):
-    def __init__(self, page: ft.Page, visible):
+    def __init__(self, page: ft.Page, visible, app=None):
         super().__init__(visible)
         self.page = page
         self.data = fetch_data(page=self.page)
         self.title: ft.Text = ft.Text("Loja do Nova", size=20, weight=ft.FontWeight.W_800)
+        self.app = app
+        # self.menubar = self.app.menubar
         self.toggle: ft.IconButton = ft.IconButton(
             **toggle_style_sheet, on_click=lambda e: self.refresh(e)
         )
@@ -164,7 +173,9 @@ class FrontBox(ft.SafeArea):
             controls=[
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[self.title, self.toggle]
+                    controls=[self.title,
+                              ft.Row([self.toggle], alignment=ft.MainAxisAlignment.END)
+                              ]
                 ),
                 ft.Divider(height=5),
                 ft.Divider(height=10, color=ft.colors.TRANSPARENT),
